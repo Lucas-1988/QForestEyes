@@ -1,0 +1,37 @@
+[general]
+name=Qforesteyes
+
+#version del complemento
+version=1.0
+
+qgisMinimumVersion=2.99
+
+qgisMaximumVersion=3.98
+
+#autor
+author=Lucas Leonczyk
+
+#direccion email
+email=leonczyklucas@gmail.com
+
+description=Plugin para detectar cambios de cobertura en sectores localizados. 
+about=Para poder utilizarlo, es imprescindible tener una cuenta en Google Earth Engine (GEE), crear un proyecto para obtener su ID de proyecto, habilitar APIs y habilitar permisos.
+ 
+ 1- URL de Registro=https://code.earthengine.google.com/register 
+ 
+ 2- Habilitar las APIs (las APIs de Google Earth Engine API y Google Drive API): https://console.cloud.google.com/apis/dashboard 
+ 
+ 3- Definir el proyecto para uso NO COMERCIAL: https://console.cloud.google.com/earth-engine/configuration/manage-registration 
+ 
+ 4- Configurar los roles en Gestión de Identidades y Accesos (IAM): https://console.cloud.google.com/iam-admin/iam
+
+#categoria
+category=Plugin
+
+#etiquetas
+tags=raster, vector, metadata, maps, qgis, python
+
+
+
+
+icon=LogoDeteccion.png
