@@ -18,7 +18,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (
     QMessageBox, QLineEdit, QDialog, QVBoxLayout, QFormLayout,
-    QDialogButtonBox, QComboBox, QSpinBox, QWidget, QLabel, QPushButton
+    QDialogButtonBox, QComboBox, QSpinBox, QWidget, QLabel
 )
 from qgis.utils import iface
 
@@ -60,6 +60,34 @@ def install_and_authenticate():
             iface.messageBar().pushMessage(
                 "Error", f"Error al instalar 'earthengine-api': {e}",
                 level=Qgis.Critical
+            )
+            return False
+
+
+def authenticate_gee(force=False):
+    """Autentica al usuario en Google Earth Engine (abre navegador automáticamente)."""
+    try:
+        import ee
+        ee.Initialize()
+        iface.messageBar().pushMessage(
+            "GEE", "Sesión de Google Earth Engine ya autenticada.",
+            level=Qgis.Success, duration=5
+        )
+        return True
+    except Exception:
+        try:
+            import ee
+            ee.Authenticate()  # ← Abre navegador automáticamente
+            ee.Initialize()
+            iface.messageBar().pushMessage(
+                "GEE", "¡Autenticación exitosa! Ya puedes usar QForestEyes.",
+                level=Qgis.Success, duration=8
+            )
+            return True
+        except Exception as auth_error:
+            iface.messageBar().pushMessage(
+                "GEE", f"Autenticación fallida: {auth_error}",
+                level=Qgis.Critical, duration=10
             )
             return False
 
@@ -131,27 +159,25 @@ class RangeSelectWidget(QWidget):
             start_month = value['start_month']
             end_month = value['end_month']
             is_blocked = False
-            block_reason = ""
             
             if is_current_year:
                 # Bloquear rangos no concluidos en año actual
                 if start_month == 9 and self.current_month < 11:
                     is_blocked = True
-                    block_reason = " (No concluido)"
                 elif start_month == 11:
                     is_blocked = True
-                    block_reason = " (Período futuro)"
             
-            display_text = f"{key}{block_reason}"
-            self.seasonal_combo.addItem(display_text)
-            
-            # Marcar como no seleccionable si está bloqueado
+            display_text = key
             if is_blocked:
+                display_text += " (No disponible)"
+                self.seasonal_combo.addItem(display_text)
                 self.seasonal_combo.setItemData(
                     self.seasonal_combo.count() - 1,
                     False,
                     Qt.UserRole - 1
                 )
+            else:
+                self.seasonal_combo.addItem(display_text)
     
     def validate_and_get_data(self):
         """Valida que los años sean cronológicos y retorna los datos."""
@@ -160,29 +186,23 @@ class RangeSelectWidget(QWidget):
         selected_key = self.seasonal_combo.currentText()
         
         # Limpiar texto de bloqueo
-        clean_key = selected_key.replace(" (No concluido)", "").replace(" (Período futuro)", "").strip()
-        
-        if "(No concluido)" in selected_key or "(Período futuro)" in selected_key:
+        if "(No disponible)" in selected_key:
             QMessageBox.warning(
                 None, "Opción no disponible",
-                "Esa opción estacional aún no ha concluido o es un período futuro."
+                "Esa opción estacional aún no está disponible para el año actual."
             )
             return None
+        
+        clean_key = selected_key.replace(" (No disponible)", "").strip()
         
         try:
             range_data = SEASONAL_RANGES[clean_key]
         except KeyError:
-            QMessageBox.critical(
-                None, "Error de Selección",
-                "Rango estacional no válido."
-            )
+            QMessageBox.critical(None, "Error de Selección", "Rango estacional no válido.")
             return None
         
         if t1_year >= t2_year:
-            QMessageBox.critical(
-                None, "Error de Año",
-                "El Año de Análisis (T2) debe ser posterior al Año de Referencia (T1)."
-            )
+            QMessageBox.critical(None, "Error de Año", "El Año T2 debe ser posterior al Año T1.")
             return None
         
         return {
@@ -281,7 +301,7 @@ def get_user_parameters_with_zones():
     return None
 
 
-# === Herramienta de dibujo ===
+# === Herramienta de dibujo MEJORADA (borde verde sin relleno) ===
 class GetExtentMapTool(QgsMapToolEmitPoint):
     """Herramienta para dibujar polígonos en el canvas con estilo verde sin relleno."""
     finished = pyqtSignal(QgsGeometry)
@@ -295,7 +315,7 @@ class GetExtentMapTool(QgsMapToolEmitPoint):
         self.rubberBand = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
         self.rubberBand.setWidth(3)  # Borde más visible
         
-        # Color de borde verde
+        # Color de borde verde Spotify (#1ED760)
         self.rubberBand.setColor(QColor("#1ED760"))
         
         # Relleno TRANSPARENTE (0% opacidad)
@@ -305,16 +325,17 @@ class GetExtentMapTool(QgsMapToolEmitPoint):
         point = self.toMapCoordinates(e.pos())
         self.points.append(point)
         
+        # ✅ MOSTRAR POLÍGONO DESDE EL SEGUNDO PUNTO
         if len(self.points) == 1:
-            self.rubberBand.addPoint(point, False)
+            self.rubberBand.addPoint(point, False)  # Primer punto: no actualizar visualmente
         else:
-            self.rubberBand.addPoint(point, True)  # ← True = actualizar y mostrar polígono parcial
+            self.rubberBand.addPoint(point, True)   # Segundo punto+: actualizar y mostrar polígono
         
         self.rubberBand.show()
     
     def canvasDoubleClickEvent(self, e):
         if len(self.points) > 2:
-            # Cerrar el polígono con el primer punto antes de emitir
+            # Cerrar el polígono con el primer punto
             self.rubberBand.addPoint(self.points[0], True)
             self.rubberBand.show()
             
@@ -329,14 +350,14 @@ class GetExtentMapTool(QgsMapToolEmitPoint):
         self.points = []
 
 
-# === Diálogo informativo después del dibujo ===
+# === Diálogo informativo después del dibujo (CORREGIDO) ===
 class ProcessStartedDialog(QDialog):
     """Diálogo que muestra información sobre el proceso iniciado en GEE."""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("🔍 Proceso iniciado en Google Earth Engine")
-        self.setFixedSize(450, 220)
+        self.setFixedSize(480, 230)
         
         layout = QVBoxLayout()
         
@@ -349,13 +370,14 @@ class ProcessStartedDialog(QDialog):
         info_label.setWordWrap(True)
         layout.addWidget(info_label)
         
-        # Enlace a Tasks
+        # Enlace a Tasks (CORREGIDO: sin espacios que rompen la URL)
         link_label = QLabel(
-            '<a href="https://code.earthengine.google.com/tasks" style="color:#1a0dab;text-decoration:underline;">'
+            '<a href="https://code.earthengine.google.com/tasks" style="color:#1a0dab;font-weight:bold;text-decoration:underline;">'
             'https://code.earthengine.google.com/tasks</a>'
         )
         link_label.setOpenExternalLinks(True)
         link_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        link_label.setAlignment(Qt.AlignCenter)
         
         layout.addWidget(QLabel("🔗 Sigue el progreso aquí:"))
         layout.addWidget(link_label)
@@ -368,12 +390,13 @@ class ProcessStartedDialog(QDialog):
         note_label.setWordWrap(True)
         layout.addWidget(note_label)
         
-        # Botón Cerrar
+        # Botón Cerrar (simple, SIN temporizador)
         button_box = QDialogButtonBox(QDialogButtonBox.Ok)
         button_box.accepted.connect(self.accept)
         layout.addWidget(button_box)
         
         self.setLayout(layout)
+        # ✅ SIN temporizador → el diálogo permanece visible hasta que el usuario haga clic en "OK"
 
 
 # === Funciones de procesamiento GEE ===
@@ -422,20 +445,16 @@ class QFEChangeDetector(QObject):
     
     def run_gee_script(self, polygon_geometry):
         """Ejecuta el flujo completo de detección de cambios."""
-        # 1. Mostrar diálogo informativo INMEDIATAMENTE después del dibujo
-        dialog = ProcessStartedDialog()
-        dialog.exec_()
-        
-        # 2. Inicializar GEE
+        # 1. Inicializar GEE
         if not initialize_gee(self.project_id):
             return
         
         import ee
         
-        # 3. Obtener coordenadas del polígono dibujado
+        # 2. Obtener coordenadas del polígono dibujado
         coords_list = [[p.x(), p.y()] for p in self.map_tool.points]
         
-        # 4. Obtener CRS del canvas
+        # 3. Obtener CRS del canvas
         qgis_crs_obj = iface.mapCanvas().mapSettings().destinationCrs()
         if qgis_crs_obj.isValid():
             epsg_code = qgis_crs_obj.postgisSrid()
@@ -449,10 +468,10 @@ class QFEChangeDetector(QObject):
             duration=5
         )
         
-        # 5. Construir geometría de Earth Engine
+        # 4. Construir geometría de Earth Engine
         ee_polygon = ee.Geometry.Polygon(coords_list, proj=ee_crs, geodesic=False)
         
-        # 6. Parámetros de procesamiento
+        # 5. Parámetros de procesamiento
         cloud_percent = 30
         scale = 10
         collection_id = 'COPERNICUS/S2_SR_HARMONIZED'
@@ -463,7 +482,7 @@ class QFEChangeDetector(QObject):
             duration=8
         )
         
-        # 7. Obtener NDVI para T1 y T2
+        # 6. Obtener NDVI para T1 y T2
         ndvi_t1, size_t1 = get_ndvi_composite(
             self.dates['t1_start'], self.dates['t1_end'],
             ee_polygon, collection_id, cloud_percent
@@ -474,7 +493,7 @@ class QFEChangeDetector(QObject):
             ee_polygon, collection_id, cloud_percent
         )
         
-        # 8. Validar disponibilidad de imágenes
+        # 7. Validar disponibilidad de imágenes
         if size_t1 == 0 or size_t2 == 0:
             msg = (f"No hay imágenes de Sentinel-2 para el área/periodo seleccionado. "
                    f"(T1: {size_t1} imágenes, T2: {size_t2} imágenes). "
@@ -482,10 +501,10 @@ class QFEChangeDetector(QObject):
             iface.messageBar().pushMessage("Error", msg, level=Qgis.Critical, duration=15)
             return
         
-        # 9. Calcular Delta NDVI
+        # 8. Calcular Delta NDVI
         delta_ndvi = ndvi_t2.subtract(ndvi_t1).rename('Delta_NDVI')
         
-        # 10. Aplicar umbrales zonales (5 clases)
+        # 9. Aplicar umbrales zonales (5 clases)
         loss_threshold_abs = self.umbrales['loss_threshold']
         gain_threshold_abs = self.umbrales['gain_threshold']
         loss_light_threshold_abs = loss_threshold_abs / 2.0
@@ -531,15 +550,20 @@ class QFEChangeDetector(QObject):
             duration=8
         )
         
-        # 11. Exportar a Google Drive
+        # 10. ✅ EXPORTAR A GOOGLE DRIVE (INICIA LA TAREA EN BACKGROUND)
         self.export_image(classified_map, self.dates['t2_start'], ee_polygon, scale)
+        
+        # 11. ✅ MOSTRAR DIÁLOGO INFORMATIVO DESPUÉS DE INICIAR LA TAREA
+        # Usa exec_() para que sea modal y permanezca visible hasta que el usuario haga clic en "OK"
+        dialog = ProcessStartedDialog()
+        dialog.exec_()  # ← exec_() bloquea hasta que el usuario cierre el diálogo
     
     def export_image(self, image, start_date, ee_polygon, scale):
         """Exporta la imagen clasificada a Google Drive."""
         import ee
         
         try:
-            prefix = f'DeltaNDVI_{self.num_categories}C_Change'
+            prefix = f'QForestEyes_{self.num_categories}C_Change'
             task = ee.batch.Export.image.toDrive(
                 image=image,
                 description='QForestEyes_Change_Detection',
@@ -549,13 +573,13 @@ class QFEChangeDetector(QObject):
                 region=ee_polygon,
                 maxPixels=1e13
             )
-            task.start()
+            task.start()  # ← ¡LA TAREA SE INICIA INMEDIATAMENTE AQUÍ!
             
             iface.messageBar().pushMessage(
                 "Exportación",
-                "✅ Tarea iniciada en GEE. Revisa el estado en: code.earthengine.google.com/tasks",
+                "✅ Tarea iniciada en GEE. Revisa el estado en Tasks.",
                 level=Qgis.Success,
-                duration=15
+                duration=10
             )
         except Exception as e:
             iface.messageBar().pushMessage(
