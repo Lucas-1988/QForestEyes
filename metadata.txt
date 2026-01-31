@@ -14,7 +14,7 @@ author=Lucas Leonczyk
 #direccion email
 email=leonczyklucas@gmail.com
 
-description=Plugin para detectar cambios de cobertura en sectores localizados comparando entre años
+description=Plugin para detectar cambios de cobertura en sectores localizados utilizando tecnicas de análisis multitemporal y métodos cuantitativos/cualitativos delegando la carga computacional a la nube mediante Google Earth Engine (GEE)
 
 about=Para poder utilizarlo, es imprescindible tener una cuenta en Google Earth Engine (GEE), crear un proyecto para obtener su ID de proyecto, habilitar APIs y habilitar permisos.
  
