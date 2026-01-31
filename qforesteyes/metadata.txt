@@ -31,7 +31,7 @@ category=Plugin
 homepage=https://github.com/Lucas-1988/QForestEyes
 
 #seguimiento de errores
-tracker=https://github.com/Lucas-1988/QForestEyes
+tracker=https://github.com/Lucas-1988/QForestEyes/issuesls
 
 #Repositorio
 repository=https://github.com/Lucas-1988/QForestEyes
