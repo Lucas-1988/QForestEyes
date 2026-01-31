@@ -2,7 +2,7 @@
   <img src="icons/LogoQFeyes.png" width="300">
 </p>
 
-**QForestEyes** es un complemento (plugin) para **QGIS** diseñado para la detección de cambios en la cobertura vegetal mediante el análisis de imágenes satelitales. Utiliza la potencia de **Google Earth Engine (GEE)** para procesar grandes volúmenes de datos y generar mapas de diferencia de cobertura vegetal mediante tecnicas de comparación entre fechas utulizando metodos cuantitativos y cualitativos de forma eficiente.
+**QForestEyes** es un complemento (plugin) para **QGIS** diseñado para la detección de cambios en la cobertura vegetal mediante el análisis de imágenes satelitales. Su principal ventaja es que delega la carga computacional a la nube mediante **Google Earth Engine (GEE)** permitiendo que usuarios con equipos de recursos limitados realicen análisis complejos sin comprometer el rendimiento de su hardware local. El plugin emplea técnicas de comparación multitemporal y métodos cuantitativos/cualitativos para generar mapas de diferencia de alta precisión de forma eficiente.
 
 ## 🚀 Características principales
 
@@ -50,3 +50,4 @@ Para utilizar este plugin, es necesario:
 ## ⚖️ Licencia
 
 Este proyecto está bajo la Licencia GNU GPL v3.
+
