@@ -15,7 +15,7 @@
 ## 🛠️ Requisitos
 
 Para utilizar este plugin, es necesario:
-1.  Tener instalado **QGIS** (versión 2.8 como mínimo).
+1.  Tener instalado **QGIS** (versión 2.8 en adelante).
 2.  Contar con una cuenta registrada en [Google Earth Engine](https://earthengine.google.com/).
 3.  Crear un proyecto en GEE y obtener una ID de proyecto (esta ID será la que te solicite el plugin para ejecutarse)
 4.  Habilitar las APIs (las APIs de Google Earth Engine API y Google Drive API): https://console.cloud.google.com/apis/dashboard 
@@ -50,4 +50,5 @@ Para utilizar este plugin, es necesario:
 ## ⚖️ Licencia
 
 Este proyecto está bajo la Licencia GNU GPL v3.
+
 
