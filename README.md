@@ -12,14 +12,6 @@
 * **Vectorización Automática:** Convierte los resultados raster a polígonos vectoriales listos para análisis geoespacial, incluyendo cálculo automático de superficies en hectáreas.
 * **Visualización Dinámica:** Clasifica los cambios en hasta 3 categorías (pérdida, sin cambios y ganancia).
 
-## 🛠️ Requisitos
-
-Para utilizar este plugin, es necesario:
-1.  Tener instalado **QGIS** (versión 2.8 en adelante).
-2.  Contar con una cuenta registrada en [Google Earth Engine](https://earthengine.google.com/).
-3.  Crear un proyecto en GEE y obtener una ID de proyecto (esta ID será la que te solicite el plugin para ejecutarse)
-4.  Habilitar las APIs (las APIs de Google Earth Engine API y Google Drive API): https://console.cloud.google.com/apis/dashboard 
-
 ## 📂 Estructura del Repositorio
 
 * `qforesteyes.py`: Lógica principal y manejo de la API de Earth Engine.
@@ -34,13 +26,31 @@ Para utilizar este plugin, es necesario:
 3.  Selecciona **Instalar a partir de ZIP** y elige el archivo descargado.
 4.  Asegúrate de tener un **ID de Proyecto de Google Cloud** válido para inicializar GEE.
 
-## 📝 Uso rápido
 
-1.  Inicia el complemento desde la barra de herramientas de QGIS.
-2.  Configura el ID de tu proyecto de GEE y selecciona la zona de análisis.
+## <img src="icons/info.png" width="25"> Configurar el plugin antes de ejecutarlo 
+
+Para utilizar este plugin, es necesario:
+1.  Tener instalado **QGIS** (versión 2.8 en adelante).
+2.  Contar con una cuenta registrada en [Google Earth Engine](https://earthengine.google.com/).
+3.  Crear un proyecto en GEE y obtener una ID de proyecto (esta ID será la que te solicite el plugin para ejecutarse)
+4.  Habilitar las APIs necesarias (Google Earth Engine API y Google Drive API): https://console.cloud.google.com/apis/dashboard 
+5.  Autenticar con Google el proyecto dando click en el boton verde (espera unos minutos y se abrirá el navegador pidiendote que confirmes que inicias sesion en Google, posiblemente te manden un codigo de verificación a tu movil para confirmar) ESTO SE HACE POR UNICA VEZ 😁
+
+## <img src="icons/detect.png" width="25"> Uso del detector 
+
+1.  para ejecutar el detector haz click en <img src="icons/detect.png" width="15"> , introduce el ID de tu proyecto de GEE. 
+2.  Selecciona la zona de análisis dibujando un polígono.
 3.  Define los años de referencia (T1) y análisis (T2) junto con el rango estacional.
 4.  Dibuja un polígono en el lienzo de QGIS sobre el área de interés.
 5.  ¡Listo! El plugin procesará los datos y te notificará cuando el resultado esté disponible en tu Google Drive o listo para vectorizar.
+
+## <img src="icons/vectorize.png" width="25"> Uso del vectorizador 
+
+1.  para ejecutar el vectorizador haz click en <img src="icons/vectorize.png" width="15">
+2.  Busca en tu ordenador el raster que descargaste de Google Drive y dale aceptar.
+3.  Selecciona cuantos tipos de clasificación deseas.
+4.  Espera unos minutos mientras se procesa el raster. 
+5.  ¡Listo! ya tienes su shp de cambios de cobertura.
 
 ---
 
@@ -48,7 +58,7 @@ Para utilizar este plugin, es necesario:
 **Lucas M. Leonczyk** *GIS Specialist / Python Developer* [GitHub Profile](https://github.com/Lucas-1988)
 
 ## ⚖️ Licencia
-
 Este proyecto está bajo la Licencia GNU GPL v3.
+
 
 
